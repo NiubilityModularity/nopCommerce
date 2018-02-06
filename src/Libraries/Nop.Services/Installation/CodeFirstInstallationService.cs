@@ -6348,7 +6348,8 @@ namespace Nop.Services.Installation
                 ReturnValidOptionsIfThereAreAny = true,
                 BypassShippingMethodSelectionIfOnlyOne = false,
                 UseCubeRootMethod = true,
-                ConsiderAssociatedProductsDimensions = true
+                ConsiderAssociatedProductsDimensions = true,
+                ShipSeparatelyOneItemEach = true
             });
 
             settingService.SaveSetting(new PaymentSettings

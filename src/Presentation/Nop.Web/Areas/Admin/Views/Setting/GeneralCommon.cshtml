@@ -126,6 +126,16 @@
                         </div>
                         <div class="form-group advanced-setting">
                             <div class="col-md-3">
+                                <nop-override-store-checkbox asp-for="StoreInformationSettings.CheckoutDisabled_OverrideForStore" asp-input="StoreInformationSettings.CheckoutDisabled" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+                                <nop-label asp-for="StoreInformationSettings.CheckoutDisabled" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="StoreInformationSettings.CheckoutDisabled" />
+                                <span asp-validation-for="StoreInformationSettings.CheckoutDisabled"></span>
+                            </div>
+                        </div>
+                        <div class="form-group advanced-setting">
+                            <div class="col-md-3">
                                 <nop-override-store-checkbox asp-for="StoreInformationSettings.SubjectFieldOnContactUsForm_OverrideForStore" asp-input="StoreInformationSettings.SubjectFieldOnContactUsForm" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
                                 <nop-label asp-for="StoreInformationSettings.SubjectFieldOnContactUsForm" />
                             </div>

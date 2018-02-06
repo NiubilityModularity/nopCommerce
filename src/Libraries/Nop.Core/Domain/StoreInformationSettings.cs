@@ -3,7 +3,7 @@
 namespace Nop.Core.Domain
 {
     /// <summary>
-    /// Store onformation settings
+    /// Store information settings
     /// </summary>
     public class StoreInformationSettings : ISettings
     {
@@ -17,6 +17,11 @@ namespace Nop.Core.Domain
         /// Gets or sets a value indicating whether store is closed
         /// </summary>
         public bool StoreClosed { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether checkout is disabled
+        /// </summary>
+        public bool CheckoutDisabled { get; set; }
 
         /// <summary>
         /// Gets or sets a picture identifier of the logo. If 0, then the default one will be used

@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
+using Nop.Core.Domain;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Orders;
@@ -61,6 +62,7 @@ namespace Nop.Web.Controllers
         private readonly ShippingSettings _shippingSettings;
         private readonly AddressSettings _addressSettings;
         private readonly CustomerSettings _customerSettings;
+        private readonly StoreInformationSettings _storeInformationSettings;
 
         #endregion
 
@@ -91,7 +93,8 @@ namespace Nop.Web.Controllers
             PaymentSettings paymentSettings,
             ShippingSettings shippingSettings,
             AddressSettings addressSettings,
-            CustomerSettings customerSettings)
+            CustomerSettings customerSettings,
+            StoreInformationSettings storeInformationSettings)
         {
             this._checkoutModelFactory = checkoutModelFactory;
             this._workContext = workContext;
@@ -120,6 +123,7 @@ namespace Nop.Web.Controllers
             this._shippingSettings = shippingSettings;
             this._addressSettings = addressSettings;
             this._customerSettings = customerSettings;
+            this._storeInformationSettings = storeInformationSettings;
         }
 
         #endregion
@@ -148,6 +152,9 @@ namespace Nop.Web.Controllers
 
         public virtual IActionResult Index()
         {
+            if(_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -251,6 +258,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult BillingAddress()
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -318,6 +328,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult NewBillingAddress(CheckoutBillingAddressModel model)
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -391,6 +404,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult ShippingAddress()
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -439,6 +455,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult NewShippingAddress(CheckoutShippingAddressModel model)
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -540,6 +559,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult ShippingMethod()
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -557,7 +579,7 @@ namespace Nop.Web.Controllers
             {
                 _genericAttributeService.SaveAttribute<ShippingOption>(_workContext.CurrentCustomer, SystemCustomerAttributeNames.SelectedShippingOption, null, _storeContext.CurrentStore.Id);
                 return RedirectToRoute("CheckoutPaymentMethod");
-                }
+            }
             
             //model
             var model = _checkoutModelFactory.PrepareShippingMethodModel(cart, _workContext.CurrentCustomer.ShippingAddress);
@@ -582,6 +604,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult SelectShippingMethod(string shippingoption)
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -641,6 +666,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult PaymentMethod()
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -697,6 +725,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult SelectPaymentMethod(string paymentmethod, CheckoutPaymentMethodModel model)
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -747,6 +778,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult PaymentInfo()
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -798,6 +832,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult EnterPaymentInfo(IFormCollection form)
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -847,6 +884,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult Confirm()
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -869,6 +909,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult ConfirmOrder()
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -1076,6 +1119,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult OnePageCheckout()
         {
             //validation
+            if (_storeInformationSettings.CheckoutDisabled)
+                return RedirectToRoute("ShoppingCart");
+
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -1099,6 +1145,9 @@ namespace Nop.Web.Controllers
             try
             {
                 //validation
+                if (_storeInformationSettings.CheckoutDisabled)
+                    throw new Exception(_localizationService.GetResource("Checkout.Disabled"));
+
                 var cart = _workContext.CurrentCustomer.ShoppingCartItems
                     .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                     .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -1234,6 +1283,9 @@ namespace Nop.Web.Controllers
             try
             {
                 //validation
+                if (_storeInformationSettings.CheckoutDisabled)
+                    throw new Exception(_localizationService.GetResource("Checkout.Disabled"));
+
                 var cart = _workContext.CurrentCustomer.ShoppingCartItems
                     .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                     .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -1373,6 +1425,9 @@ namespace Nop.Web.Controllers
             try
             {
                 //validation
+                if (_storeInformationSettings.CheckoutDisabled)
+                    throw new Exception(_localizationService.GetResource("Checkout.Disabled"));
+
                 var cart = _workContext.CurrentCustomer.ShoppingCartItems
                     .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                     .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -1437,6 +1492,9 @@ namespace Nop.Web.Controllers
             try
             {
                 //validation
+                if (_storeInformationSettings.CheckoutDisabled)
+                    throw new Exception(_localizationService.GetResource("Checkout.Disabled"));
+
                 var cart = _workContext.CurrentCustomer.ShoppingCartItems
                     .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                     .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -1507,6 +1565,9 @@ namespace Nop.Web.Controllers
             try
             {
                 //validation
+                if (_storeInformationSettings.CheckoutDisabled)
+                    throw new Exception(_localizationService.GetResource("Checkout.Disabled"));
+
                 var cart = _workContext.CurrentCustomer.ShoppingCartItems
                     .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                     .LimitPerStore(_storeContext.CurrentStore.Id)
@@ -1572,6 +1633,9 @@ namespace Nop.Web.Controllers
             try
             {
                 //validation
+                if (_storeInformationSettings.CheckoutDisabled)
+                    throw new Exception(_localizationService.GetResource("Checkout.Disabled"));
+
                 var cart = _workContext.CurrentCustomer.ShoppingCartItems
                     .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                     .LimitPerStore(_storeContext.CurrentStore.Id)

@@ -64,82 +64,15 @@ namespace Nop.Web.Factories
 
         #endregion
 
-        #region Methods
-
-        /// <summary>
-        /// Prepare the apply vendor model
-        /// </summary>
-        /// <param name="model">The apply vendor model</param>
-        /// <param name="validateVendor">Whether to validate that the customer is already a vendor</param>
-        /// <param name="excludeProperties">Whether to exclude populating of model properties from the entity</param>
-        /// <returns>The apply vendor model</returns>
-        public virtual ApplyVendorModel PrepareApplyVendorModel(ApplyVendorModel model, bool validateVendor, bool excludeProperties)
-        {
-            if (model == null)
-                throw new ArgumentNullException(nameof(model));
-
-            if (validateVendor && _workContext.CurrentCustomer.VendorId > 0)
-            {
-                //already applied for vendor account
-                model.DisableFormInput = true;
-                model.Result = _localizationService.GetResource("Vendors.ApplyAccount.AlreadyApplied");
-            }
-
-            model.DisplayCaptcha = _captchaSettings.Enabled && _captchaSettings.ShowOnApplyVendorPage;
-            model.TermsOfServiceEnabled = _vendorSettings.TermsOfServiceEnabled;
-            model.TermsOfServicePopup = _commonSettings.PopupForTermsOfServiceLinks;
-
-            if (!excludeProperties)
-            {
-                model.Email = _workContext.CurrentCustomer.Email;
-            }
-
-            return model;
-        }
-
-        /// <summary>
-        /// Prepare the vendor info model
-        /// </summary>
-        /// <param name="model">Vendor info model</param>
-        /// <param name="excludeProperties">Whether to exclude populating of model properties from the entity</param>
-        /// <param name="overriddenVendorAttributesXml">Overridden vendor attributes in XML format; pass null to use VendorAttributes of vendor</param>
-        /// <returns>Vendor info model</returns>
-        public virtual VendorInfoModel PrepareVendorInfoModel(VendorInfoModel model, bool excludeProperties, string overriddenVendorAttributesXml = "")
-        {
-            if (model == null)
-                throw new ArgumentNullException(nameof(model));
-
-            var vendor = _workContext.CurrentVendor;
-            if (!excludeProperties)
-            {
-                model.Description = vendor.Description;
-                model.Email = vendor.Email;
-                model.Name = vendor.Name;
-            }
-
-            var picture = _pictureService.GetPictureById(vendor.PictureId);
-            var pictureSize = _mediaSettings.AvatarPictureSize;
-            model.PictureUrl = picture != null ? _pictureService.GetPictureUrl(picture, pictureSize) : string.Empty;
-
-            //vendor attributes
-            var vendorAttributes = PrepareVendorAttributes(vendor, overriddenVendorAttributesXml);
-            foreach (var attribute in vendorAttributes)
-                model.VendorAttributes.Add(attribute);
-
-            return model;
-        }
+        #region Utilities
 
         /// <summary>
         /// Prepare vendor attribute models
         /// </summary>
-        /// <param name="vendor">Vendor</param>
-        /// <param name="overriddenAttributesXml">Overridden vendor attributes in XML format; pass null to use VendorAttributes of vendor</param>
+        /// <param name="vendorAttributesXml">Vendor attributes in XML format</param>
         /// <returns>List of the vendor attribute model</returns>
-        public virtual IList<VendorAttributeModel> PrepareVendorAttributes(Vendor vendor, string overriddenAttributesXml = "")
+        protected virtual IList<VendorAttributeModel> PrepareVendorAttributes(string vendorAttributesXml)
         {
-            if (vendor == null)
-                throw new ArgumentNullException(nameof(vendor));
-
             var result = new List<VendorAttributeModel>();
 
             var vendorAttributes = _vendorAttributeService.GetAllVendorAttributes();
@@ -169,23 +102,20 @@ namespace Nop.Web.Factories
                     }
                 }
 
-                //set already selected attributes
-                var selectedAttributesXml = !string.IsNullOrEmpty(overriddenAttributesXml) ? overriddenAttributesXml :
-                    vendor.GetAttribute<string>(VendorAttributeNames.VendorAttributes, _genericAttributeService);
                 switch (attribute.AttributeControlType)
                 {
                     case AttributeControlType.DropdownList:
                     case AttributeControlType.RadioList:
                     case AttributeControlType.Checkboxes:
                         {
-                            if (!string.IsNullOrEmpty(selectedAttributesXml))
+                            if (!string.IsNullOrEmpty(vendorAttributesXml))
                             {
                                 //clear default selection
                                 foreach (var item in attributeModel.Values)
                                     item.IsPreSelected = false;
 
                                 //select new values
-                                var selectedValues = _vendorAttributeParser.ParseVendorAttributeValues(selectedAttributesXml);
+                                var selectedValues = _vendorAttributeParser.ParseVendorAttributeValues(vendorAttributesXml);
                                 foreach (var attributeValue in selectedValues)
                                     foreach (var item in attributeModel.Values)
                                         if (attributeValue.Id == item.Id)
@@ -202,9 +132,9 @@ namespace Nop.Web.Factories
                     case AttributeControlType.TextBox:
                     case AttributeControlType.MultilineTextbox:
                         {
-                            if (!string.IsNullOrEmpty(selectedAttributesXml))
+                            if (!string.IsNullOrEmpty(vendorAttributesXml))
                             {
-                                var enteredText = _vendorAttributeParser.ParseValues(selectedAttributesXml, attribute.Id);
+                                var enteredText = _vendorAttributeParser.ParseValues(vendorAttributesXml, attribute.Id);
                                 if (enteredText.Any())
                                     attributeModel.DefaultValue = enteredText[0];
                             }
@@ -223,6 +153,79 @@ namespace Nop.Web.Factories
             }
 
             return result;
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Prepare the apply vendor model
+        /// </summary>
+        /// <param name="model">The apply vendor model</param>
+        /// <param name="validateVendor">Whether to validate that the customer is already a vendor</param>
+        /// <param name="excludeProperties">Whether to exclude populating of model properties from the entity</param>
+        /// <param name="vendorAttributesXml">Vendor attributes in XML format</param>
+        /// <returns>The apply vendor model</returns>
+        public virtual ApplyVendorModel PrepareApplyVendorModel(ApplyVendorModel model, 
+            bool validateVendor, bool excludeProperties, string vendorAttributesXml)
+        {
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
+            if (validateVendor && _workContext.CurrentCustomer.VendorId > 0)
+            {
+                //already applied for vendor account
+                model.DisableFormInput = true;
+                model.Result = _localizationService.GetResource("Vendors.ApplyAccount.AlreadyApplied");
+            }
+
+            model.DisplayCaptcha = _captchaSettings.Enabled && _captchaSettings.ShowOnApplyVendorPage;
+            model.TermsOfServiceEnabled = _vendorSettings.TermsOfServiceEnabled;
+            model.TermsOfServicePopup = _commonSettings.PopupForTermsOfServiceLinks;
+
+            if (!excludeProperties)
+            {
+                model.Email = _workContext.CurrentCustomer.Email;
+            }
+
+            //vendor attributes
+            model.VendorAttributes = PrepareVendorAttributes(vendorAttributesXml);
+
+            return model;
+        }
+
+        /// <summary>
+        /// Prepare the vendor info model
+        /// </summary>
+        /// <param name="model">Vendor info model</param>
+        /// <param name="excludeProperties">Whether to exclude populating of model properties from the entity</param>
+        /// <param name="overriddenVendorAttributesXml">Overridden vendor attributes in XML format; pass null to use VendorAttributes of vendor</param>
+        /// <returns>Vendor info model</returns>
+        public virtual VendorInfoModel PrepareVendorInfoModel(VendorInfoModel model, 
+            bool excludeProperties, string overriddenVendorAttributesXml = "")
+        {
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
+            var vendor = _workContext.CurrentVendor;
+            if (!excludeProperties)
+            {
+                model.Description = vendor.Description;
+                model.Email = vendor.Email;
+                model.Name = vendor.Name;
+            }
+
+            var picture = _pictureService.GetPictureById(vendor.PictureId);
+            var pictureSize = _mediaSettings.AvatarPictureSize;
+            model.PictureUrl = picture != null ? _pictureService.GetPictureUrl(picture, pictureSize) : string.Empty;
+
+            //vendor attributes
+            if (string.IsNullOrEmpty(overriddenVendorAttributesXml))
+                overriddenVendorAttributesXml = vendor.GetAttribute<string>(VendorAttributeNames.VendorAttributes, _genericAttributeService);
+            model.VendorAttributes = PrepareVendorAttributes(overriddenVendorAttributesXml);
+
+            return model;
         }
 
         #endregion

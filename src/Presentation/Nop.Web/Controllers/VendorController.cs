@@ -186,7 +186,7 @@ namespace Nop.Web.Controllers
                 return Challenge();
 
             var model = new ApplyVendorModel();
-            model = _vendorModelFactory.PrepareApplyVendorModel(model, true, false);
+            model = _vendorModelFactory.PrepareApplyVendorModel(model, true, false, null);
             return View(model);
         }
 
@@ -226,6 +226,11 @@ namespace Nop.Web.Controllers
                 }
             }
 
+            //vendor attributes
+            var vendorAttributesXml = ParseVendorAttributes(model.Form);
+            _vendorAttributeParser.GetAttributeWarnings(vendorAttributesXml).ToList()
+                .ForEach(warning => ModelState.AddModelError(string.Empty, warning));
+
             if (ModelState.IsValid)
             {
                 var description = Core.Html.HtmlHelper.FormatText(model.Description, false, false, true, false, false, false);
@@ -255,6 +260,9 @@ namespace Nop.Web.Controllers
                 //update picture seo file name
                 UpdatePictureSeoNames(vendor);
 
+                //save vendor attributes
+                _genericAttributeService.SaveAttribute(vendor, VendorAttributeNames.VendorAttributes, vendorAttributesXml);
+
                 //notify store owner here (email)
                 _workflowMessageService.SendNewVendorAccountApplyStoreOwnerNotification(_workContext.CurrentCustomer,
                     vendor, _localizationSettings.DefaultAdminLanguageId);
@@ -265,7 +273,7 @@ namespace Nop.Web.Controllers
             }
 
             //If we got this far, something failed, redisplay form
-            model = _vendorModelFactory.PrepareApplyVendorModel(model, false, true);
+            model = _vendorModelFactory.PrepareApplyVendorModel(model, false, true, vendorAttributesXml);
             return View(model);
         }
 
